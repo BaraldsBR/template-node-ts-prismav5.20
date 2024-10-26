@@ -20,15 +20,22 @@ app.use(express.json());
 
 app.use(routes);
 
-app.get('/teste', (req: Request, res: Response) => {
+app.get('/teste', (_req: Request, res: Response) => {
   res.json({ message: 'Hello World' });
 });
 
-app.use((err: Error, request: Request, response: Response, _: NextFunction) => {
+app.use((err: Error & { type?: string }, _request: Request, response: Response, _: NextFunction) => {
   if (err instanceof AppError) {
     return response.status(err.statusCode).json({
       status: 'error',
       message: err.message,
+    });
+  }
+
+  if (err instanceof SyntaxError && err.type === 'entity.parse.failed') {
+    return response.status(400).json({
+      status: 'error',
+      message: 'Bad JSON',
     });
   }
 
